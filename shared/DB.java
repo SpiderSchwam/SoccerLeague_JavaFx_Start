@@ -12,6 +12,7 @@ import java.util.Properties;
 import coach.Coach;
 import league.League;
 import team.Team;
+import field.Field;
 
 public class DB {
 	private Connection conn = null;
@@ -195,7 +196,79 @@ public class DB {
 		}
 	}
 
-	
+	public static ArrayList<Field> loadFields(){
+		ArrayList<Field> list = new ArrayList<>(); 
+		String queryString = " select field.field_id, field.field_name, count(game.field_id) as used " + 
+		" from field  " +
+		" left join game on game.field_id = field.field_id " +
+		" group by field.field_name " +
+		" order by field.field_name ";
+
+		try (
+				PreparedStatement queryStmt = db.conn.prepareStatement(queryString);
+				ResultSet rs = queryStmt.executeQuery();) {
+
+			while (rs.next()) {
+				Field f = new Field(rs.getString("field_id"), rs.getString("field_name"));
+
+				// A field can be deleted if it is not used in a child table (team?)
+				f.setCanEdit(rs.getInt("used") == 0);
+
+				list.add(f);
+			}
+
+		} catch (Exception ex) {
+			System.err.println(ex);
+			ex.printStackTrace(System.err);
+		}
+
+		return list;
+	}
+
+	public static void insertField(Field field){
+		String query = "insert into field(field_name) values (?)";
+
+		try (PreparedStatement insertStmt = db.conn.prepareStatement(query)) {
+
+			insertStmt.setString(1, field.getFieldName());
+
+			insertStmt.executeUpdate();
+		} catch (Exception ex) {
+			System.err.println(ex);
+			ex.printStackTrace(System.err);
+		}
+	}
+
+	public static void updateField(Field field){
+		String query = "update field set field_name = ?, " +
+				" where field_id = ?";
+
+		try (PreparedStatement updateStmt = db.conn.prepareStatement(query)) {
+
+			updateStmt.setString(1, field.getFieldName());
+			updateStmt.setString(2, field.getFieldID());
+			updateStmt.executeUpdate();
+		} catch (Exception ex) {
+			System.err.println(ex);
+			ex.printStackTrace(System.err);
+		}
+
+	}
+
+	public static void deleteField(String fieldID){
+		String query = "delete from field where field_id = ?";
+
+		try (PreparedStatement updateStmt = db.conn.prepareStatement(query)) {
+
+			updateStmt.setString(1, fieldID);
+			updateStmt.executeUpdate();
+		} catch (Exception ex) {
+			System.err.println(ex);
+			ex.printStackTrace(System.err);
+		}
+	}
+
+
 	public static ArrayList<Team> loadTeams() {
 		ArrayList<Team> list = new ArrayList<>();
 		String queryString = "select team.team_id, name, team.league_id, team.coach_id, league_name, coach_last_name, coach_first_name, count(player.team_id) as used "
@@ -229,16 +302,19 @@ public class DB {
 	}
 
 	public static void insertTeam(String leagueID, String teamName, String coachID) {
-		String query = "insert into team (league_id, team_name, coach_id) values (?, ?, ?)";
+		String query = "insert into team (league_id, name, coach_id) values (?, ?, ?)";
 
 		try (PreparedStatement insertStmt = db.conn.prepareStatement(query)) {
 			insertStmt.setString(1, leagueID); //sets pos 1 to ID
 			insertStmt.setString(2, teamName);
 			insertStmt.setString(3, coachID);
+
+			insertStmt.executeUpdate();
 		} catch (Exception ex) {
 			System.err.println(ex);
 			ex.printStackTrace(System.err);
 		}
+
 	}
 
 	public static void updateTeam(Team team) {
@@ -252,6 +328,8 @@ public class DB {
 			updateStmt.setString(2, team.getLeague().getLeagueID());
 			updateStmt.setString(3, team.getCoach().getCoachID());
 			updateStmt.setString(4, team.getTeamID());
+			
+			updateStmt.executeUpdate();
 		} catch (Exception ex) {
 			System.err.println(ex);
 			ex.printStackTrace(System.err);

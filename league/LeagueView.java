@@ -35,6 +35,7 @@ public class LeagueView {
     public LeagueView() {
     }
 
+    //Reloads table
     public void reloadLeagues() {
         data.clear();
         data.addAll(DB.loadLeagues());

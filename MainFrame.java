@@ -10,6 +10,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import league.LeagueView;
 import team.TeamView;
+import field.FieldView;
 
 public class MainFrame extends Application {
 
@@ -23,15 +24,18 @@ public class MainFrame extends Application {
         LeagueView lv = new LeagueView();
         CoachView cv = new CoachView();
         TeamView tv = new TeamView();
+        FieldView fv = new FieldView();
         TabPane tabPane = new TabPane();
 
         Tab tab1 = new Tab("Leagues", lv.getLeagueTab());
         Tab tab2 = new Tab("Coaches", cv.getCoachTab());
         Tab tab3 = new Tab("Teams" , tv.getTeamTab());
+        Tab tab4 = new Tab("Fields" , fv.getFieldTab());
 
         tabPane.getTabs().add(tab1);
         tabPane.getTabs().add(tab2);
         tabPane.getTabs().add(tab3);
+        tabPane.getTabs().add(tab4);
 
         tab1.setOnSelectionChanged(ev -> {
             lv.reloadLeagues();
@@ -43,6 +47,10 @@ public class MainFrame extends Application {
 
         tab3.setOnSelectionChanged(ev -> {
             tv.reloadTeams();
+        });
+
+        tab3.setOnSelectionChanged(ev -> {
+            fv.reloadFields();
         });
 
         VBox vBox = new VBox(tabPane);
